@@ -8,9 +8,13 @@ test('profile, education and contact information are accurate', async ({ page })
   await expect(page).toHaveTitle(/MD. FOISAL IQBAL/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('MD. FOISAL IQBAL');
   await expect(page.getByText('Computer Science & Engineering Graduate', { exact: true })).toBeVisible();
+  await page.locator('#education').scrollIntoViewIfNeeded();
   await expect(page.getByText('Jawaharlal Nehru Technological University (JNTU), India')).toBeVisible();
   await expect(page.getByText('Varendra College, Rajshahi, Bangladesh')).toBeVisible();
-  await expect(page.locator('#contact a[href="mailto:foisaliqbal09@gmail.com"]')).toBeVisible();
+  await page.locator('#contact').scrollIntoViewIfNeeded();
+  const emailLinks = page.locator('#contact a[href="mailto:foisaliqbal09@gmail.com"]');
+  await expect(emailLinks).toHaveCount(2);
+  for (const link of await emailLinks.all()) await expect(link).toBeVisible();
   await expect(page.locator('#contact a[href="tel:+8801518951073"]')).toBeVisible();
 });
 
@@ -30,6 +34,11 @@ test('mobile menu is keyboard accessible and closes after navigation', async ({ 
   await page.locator('#mobile-navigation').getByRole('link', { name: 'Skills' }).click();
   await expect(page).toHaveURL(/#skills$/);
   await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#skills')).toBeFocused();
+  await menu.click();
+  await page.keyboard.press('Escape');
+  await expect(menu).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeFocused();
 });
 
 test('mobile layout does not overflow and reduced motion is respected', async ({ page }) => {
@@ -46,6 +55,7 @@ test('page has no browser errors', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(baseURL);
+  await page.locator('footer').scrollIntoViewIfNeeded();
   await expect(page.locator('footer')).toBeVisible();
   expect(errors).toEqual([]);
 });
